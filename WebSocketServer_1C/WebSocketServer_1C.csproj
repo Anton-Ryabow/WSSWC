@@ -1,13 +1,15 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <Platforms>AnyCPU;x64</Platforms>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.20" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.0" />
         <PackageReference Include="NLog" Version="6.0.4" />
         <PackageReference Include="NLog.Config" Version="4.7.15" />
         <PackageReference Include="NLog.Schema" Version="6.0.4" />
@@ -24,6 +26,12 @@
       <Reference Include="NLog">
         <HintPath>NLog.dll</HintPath>
       </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Update="CashConfig.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
 </Project>

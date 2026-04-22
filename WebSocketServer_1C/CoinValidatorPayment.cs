@@ -1,7 +1,8 @@
-using System.Text;
-using System.Timers;
-using dk.CctalkLib.Connections;
+﻿using dk.CctalkLib.Connections;
 using dk.CctalkLib.Devices;
+using System.Text;
+using System.Text.Json;
+using System.Timers;
 using WebSocketServer_1C;
 
 public class CoinValidatorPayment : PaymentBase
@@ -48,12 +49,33 @@ public class CoinValidatorPayment : PaymentBase
 
     private Dictionary<byte, CoinTypeInfo> CreateCustomCoinConfig()
     {
+        //var coins = new Dictionary<byte, CoinTypeInfo>();
+
+        //coins.Add(0x0A, new CoinTypeInfo("1 RUB", 1.0m));
+        //coins.Add(0x0C, new CoinTypeInfo("2 RUB", 2.0m));
+        //coins.Add(0x0E, new CoinTypeInfo("5 RUB", 5.0m));
+        //coins.Add(0x10, new CoinTypeInfo("10 RUB", 10.0m));
+
+        //return coins;
+
         var coins = new Dictionary<byte, CoinTypeInfo>();
 
-        coins.Add(0x0A, new CoinTypeInfo("1 RUB", 1.0m));
-        coins.Add(0x0C, new CoinTypeInfo("2 RUB", 2.0m));
-        coins.Add(0x0E, new CoinTypeInfo("5 RUB", 5.0m));
-        coins.Add(0x10, new CoinTypeInfo("10 RUB", 10.0m));
+        string json = File.ReadAllText("CoinsConfig.json");
+
+        var config = JsonSerializer.Deserialize<Dictionary<string, int>>(json);
+
+        foreach (var kvp in config)
+        {
+            string key = kvp.Key; 
+            int channel = kvp.Value;
+
+            byte channelByte = (byte)channel;
+
+            string name = key.Replace("R", " RUB");
+            decimal value = decimal.Parse(key.Replace("R", ""));
+
+            coins.Add(channelByte, new CoinTypeInfo(name, value));
+        }
 
         return coins;
     }
@@ -112,6 +134,7 @@ public class CoinValidatorPayment : PaymentBase
     private void OnCoinAccepted(object sender, CoinAcceptorCoinEventArgs e)
     {
         FileLogger.Log("[COIN] Accepted " + e.CoinValue);
+        FileLogger.Log("[COIN] Accepted code: " + e.CoinCode);
         OnPartResult((int)e.CoinValue);
     }
 

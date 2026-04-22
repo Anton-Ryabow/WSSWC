@@ -1,14 +1,35 @@
-using System.Net.WebSockets;
-using System.Text;
-using System.Text.Json;
+using CashCode;
 using System.Collections.Concurrent;
 using System.IO.Ports;
+using System.Net.WebSockets;
+using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.JavaScript;
-using CashCode;
+using System.Text;
+using System.Text.Json;
 using WebSocketServer_1C;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
+
+[DllImport("kernel32.dll")]
+static extern IntPtr GetConsoleWindow();
+
+[DllImport("user32.dll")]
+static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+IntPtr window = GetConsoleWindow();
+ShowWindow(window, int.Parse(builder.Configuration["ShowConsole"]));
+
+bool createdNew;
+Mutex mutex = new Mutex(true, "MyWebSocketMutex", out createdNew);
+
+if (!createdNew)
+{
+    ShowWindow(window, 1);
+    Console.WriteLine(">>> Сервер уже запущен!");
+    await Task.Delay(1000);
+    return;
+}
 
 app.Urls.Add(builder.Configuration["Host"]);
 
@@ -17,7 +38,6 @@ app.UseWebSockets(new WebSocketOptions
     KeepAliveInterval = TimeSpan.FromSeconds(30)
 });
 
-//List<Session> sessions = [];
 Session? session = null;
 
 app.Map("/ws", async (HttpContext context) =>
@@ -127,50 +147,56 @@ class Session
         {
             if (error == SessionError.Cash)
             {
-                var errorMessage = new { Status = "CashCodeDisconnected", Guid = _guid };
-                var errorBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(errorMessage));
-                await webSocket.SendAsync(errorBytes, WebSocketMessageType.Text, true, ct);
+                await SendStatusMessageAsync(new { Status = "CashCodeDisconnected", Guid = _guid });
+                FileLogger.Log("[SESSION] CashCodeDisconnected");
                 if (_validator != null) _validator.IsError = true;
                 _validator?.CloseSession();
                 if (_coinValidator != null && _coinValidator.IsError)
                 {
-                    var fullErrorMessage = new { Status = "DevicesDisconnected", Guid = _guid };
-                    var fullErrorBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(fullErrorMessage));
-                    await webSocket.SendAsync(fullErrorBytes, WebSocketMessageType.Text, true, ct);
+                    await SendStatusMessageAsync(new { Status = "DevicesDisconnected", Guid = _guid });
+                    FileLogger.Log("[SESSION] DevicesDisconnected");
                     CloseSession();
                 }
             }
             else if (error == SessionError.Coin)
             {
-                var errorMessage = new { Status = "MicrocoinDisconnected", Guid = _guid };
-                var errorBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(errorMessage));
-                await webSocket.SendAsync(errorBytes, WebSocketMessageType.Text, true, ct);
+                await SendStatusMessageAsync(new { Status = "MicroCoinDisconnected", Guid = _guid });
+                FileLogger.Log("[SESSION] MicroCoinDisconnected");
                 if (_coinValidator != null) _coinValidator.IsError = true;
                 _coinValidator?.CloseSession();
                 if (_validator == null || _validator.IsError)
                 {
-                    var fullErrorMessage = new { Status = "DevicesDisconnected", Guid = _guid };
-                    var fullErrorBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(fullErrorMessage));
-                    await webSocket.SendAsync(fullErrorBytes, WebSocketMessageType.Text, true, ct);
+                    await SendStatusMessageAsync(new { Status = "DevicesDisconnected", Guid = _guid });
+                    FileLogger.Log("[SESSION] DevicesDisconnected");
                     CloseSession();
                 }
             }
         };
+
+        DeviceInitializedEvent += async (messageObject) =>
+        {
+            await SendStatusMessageAsync(messageObject);
+        };
+
         try
         {
             _validator = new CashValidatorPayment(cashPort, _targetSum);
+            OnDeviceInitialized(new { Status = "CashCode Connected"});
+            FileLogger.Log("[SESSION] CashCode Connected");
         }
         catch(Exception ex)
         {
-            ErrorEvent?.Invoke(SessionError.Cash);
+            OnError(SessionError.Cash);
         }
         try
         {
             _coinValidator = new CoinValidatorPayment(coinPort);
+            OnDeviceInitialized(new { Status = "MicroCoin Connected" });
+            FileLogger.Log("[SESSION] MicroCoin Connected");
         }
         catch (Exception ex)
         {
-            ErrorEvent?.Invoke(SessionError.Coin);
+            OnError(SessionError.Coin);
         }
         
         if (_validator != null)
@@ -178,29 +204,24 @@ class Session
             _validator.PartPaymentEvent += async (int amount) =>
             {
                 _currentSum += amount;
-                var response = new { DateTime = DateTime.Now, Guid = _guid, Accepted = amount, Device = "CashCode"};
-                var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(response));
-                await webSocket.SendAsync(bytes, WebSocketMessageType.Text, true, ct);
+                await SendStatusMessageAsync(new
+                    { DateTime = DateTime.Now, Guid = _guid, Accepted = amount, Device = "CashCode" });
                 FileLogger.Log($"[SESSION] Accepted {amount} for {_guid}");
                 if (_currentSum < _targetSum) return;
-                var final = new { Status = "FullSumAccepted", Guid = _guid };
-                var finalBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(final));
-                await webSocket.SendAsync(finalBytes, WebSocketMessageType.Text, true, ct);
+                await SendStatusMessageAsync(new { Status = "FullSumAccepted", Guid = _guid });
                 FileLogger.Log($"[SESSION] Full sum accepted for {_guid}");
                 CloseSession();
             };
             _validator.ErrorEvent += async () =>
             {
-                var errorMessage = new { Status = "CashCodeDisconnected", Guid = _guid };
-                var errorBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(errorMessage));
-                await webSocket.SendAsync(errorBytes, WebSocketMessageType.Text, true, ct);
+                await SendStatusMessageAsync(new { Status = "CashCodeDisconnected", Guid = _guid });
+                FileLogger.Log("[SESSION] CashCodeDisconnected");
                 _validator.IsError = true;
                 _validator.CloseSession();
                 if (_coinValidator == null || _coinValidator.IsError)
                 {
-                    var fullErrorMessage = new { Status = "DevicesDisconnected", Guid = _guid };
-                    var fullErrorBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(fullErrorMessage));
-                    await webSocket.SendAsync(fullErrorBytes, WebSocketMessageType.Text, true, ct);
+                    await SendStatusMessageAsync(new { Status = "DevicesDisconnected", Guid = _guid });
+                    FileLogger.Log("[SESSION] DevicesDisconnected");
                     CloseSession();
                 }
             };
@@ -210,36 +231,32 @@ class Session
         {
             _coinValidator.ErrorEvent += async () =>
             {
-                var errorMessage = new { Status = "MicroCoinDisconnected", Guid = _guid };
-                var errorBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(errorMessage));
-                await webSocket.SendAsync(errorBytes, WebSocketMessageType.Text, true, ct);
+                await SendStatusMessageAsync(new { Status = "MicroCoinDisconnected", Guid = _guid });
+                FileLogger.Log("[SESSION] MicroCoinDisconnected");
                 _coinValidator.IsError = true;
                 _coinValidator.CloseSession();
                 if (_validator == null || _validator.IsError)
                 {
-                    var fullErrorMessage = new { Status = "DevicesDisconnected", Guid = _guid };
-                    var fullErrorBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(fullErrorMessage));
-                    await webSocket.SendAsync(fullErrorBytes, WebSocketMessageType.Text, true, ct);
+                    await SendStatusMessageAsync(new { Status = "DevicesDisconnected", Guid = _guid });
+                    FileLogger.Log("[SESSION] DevicesDisconnected");
                     CloseSession();
                 }
             };
             _coinValidator.PartPaymentEvent += async (int amount) =>
             {
                 _currentSum += amount;
-                var response = new { DateTime = DateTime.Now, Guid = _guid, Accepted = amount, Device = "Microcoin" };
-                var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(response));
-                await webSocket.SendAsync(bytes, WebSocketMessageType.Text, true, ct);
+                await SendStatusMessageAsync(new
+                    { DateTime = DateTime.Now, Guid = _guid, Accepted = amount, Device = "MicroCoin" });
                 FileLogger.Log($"[SESSION] Accepted {amount} for {_guid}");
                 if (_currentSum < _targetSum) return;
-                var final = new { Status = "FullSumAccepted", Guid = _guid };
-                var finalBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(final));
-                await webSocket.SendAsync(finalBytes, WebSocketMessageType.Text, true, ct);
+                await SendStatusMessageAsync(new { Status = "FullSumAccepted", Guid = _guid });
                 FileLogger.Log($"[SESSION] Full sum accepted for {_guid} (from micro)");
                 CloseSession();
             };
         }
         FileLogger.Log("[SESSION] Created");
     }
+
     public void CloseSession()
     {
         if (_isClosed) return;
@@ -248,8 +265,27 @@ class Session
         _isClosed = true;
         FileLogger.Log("[SESSION] Closed");
     }
-    
+
+    private async Task SendStatusMessageAsync(object messageObject)
+    {
+        var message = messageObject;
+        var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+        await _webSocket.SendAsync(bytes, WebSocketMessageType.Text, true, ct);
+    }
+
+    private void OnError(SessionError sessionError)
+    {
+        ErrorEvent?.Invoke(sessionError);
+    }
+
+    private void OnDeviceInitialized(object messageObject)
+    {
+        DeviceInitializedEvent?.Invoke(messageObject);
+    }
+
+    public delegate void DeviceInitializedHandler(object messageObject);
     public delegate void ErrorHandler(SessionError error);
+    public event DeviceInitializedHandler DeviceInitializedEvent;
     public event ErrorHandler ErrorEvent;
 }
 

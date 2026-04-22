@@ -1,0 +1,95 @@
+[2026-04-20 17:38:53] [SERVER] Client connected: ::1
+[2026-04-20 17:44:05] [SERVER] Received: {"Command": "ValidatorStart", "Guid": "e3ca3445-003a-4ee3-848c-5f229be3e1b6", "Sum": 20000}
+[2026-04-20 17:44:05] [CASH] CashTable: {"1":5,"2":10,"3":50,"4":100,"12":200,"5":500,"6":1000,"13":2000,"7":5000}
+[2026-04-20 17:44:05] System.Collections.Generic.Dictionary`2[System.Int32,System.Int32] CashCodeTable
+[2026-04-20 17:44:07] [CASH] Таблица в приватном поле {"1":5,"2":10,"3":50,"4":100,"12":200,"5":500,"6":1000,"13":2000,"7":5000}
+[2026-04-20 17:44:07] [CASH] Created
+[2026-04-20 17:44:07] [SESSION] CashCode Connected
+[2026-04-20 17:44:08] [COIN] Created
+[2026-04-20 17:44:08] [SESSION] MicroCoin Connected
+[2026-04-20 17:44:08] [SESSION] Created
+[2026-04-20 17:45:13] [CASH] BillStacked: {"Value":5000,"Hold":false,"Cancel":false}
+[2026-04-20 17:45:14] [CASH] CashCode received bill
+[2026-04-20 17:45:14] [CASH] BillReceivedStatus: Accepted
+[2026-04-20 17:45:14] [SESSION] Accepted 5000 for e3ca3445-003a-4ee3-848c-5f229be3e1b6
+[2026-04-20 17:45:22] [CASH] BillStacked: {"Value":5000,"Hold":false,"Cancel":false}
+[2026-04-20 17:45:30] [CASH] BillStacked: {"Value":2000,"Hold":false,"Cancel":false}
+[2026-04-20 17:45:31] [CASH] CashCode received bill
+[2026-04-20 17:45:31] [CASH] BillReceivedStatus: Accepted
+[2026-04-20 17:45:31] [SESSION] Accepted 2000 for e3ca3445-003a-4ee3-848c-5f229be3e1b6
+[2026-04-20 17:45:39] [CASH] BillStacked: {"Value":1000,"Hold":false,"Cancel":false}
+[2026-04-20 17:45:40] [CASH] CashCode received bill
+[2026-04-20 17:45:40] [CASH] BillReceivedStatus: Accepted
+[2026-04-20 17:45:40] [SESSION] Accepted 1000 for e3ca3445-003a-4ee3-848c-5f229be3e1b6
+[2026-04-20 17:45:47] [CASH] BillStacked: {"Value":500,"Hold":false,"Cancel":false}
+[2026-04-20 17:45:54] [CASH] BillStacked: {"Value":200,"Hold":false,"Cancel":false}
+[2026-04-20 17:45:55] [CASH] CashCode received bill
+[2026-04-20 17:45:55] [CASH] BillReceivedStatus: Accepted
+[2026-04-20 17:45:55] [SESSION] Accepted 200 for e3ca3445-003a-4ee3-848c-5f229be3e1b6
+[2026-04-20 17:46:02] [CASH] BillStacked: {"Value":100,"Hold":false,"Cancel":false}
+[2026-04-20 17:46:03] [CASH] CashCode received bill
+[2026-04-20 17:46:03] [CASH] BillReceivedStatus: Accepted
+[2026-04-20 17:46:03] [SESSION] Accepted 100 for e3ca3445-003a-4ee3-848c-5f229be3e1b6
+[2026-04-20 17:46:13] [CASH] BillStacked: {"Value":100,"Hold":false,"Cancel":false}
+[2026-04-20 17:46:14] [CASH] CashCode received bill
+[2026-04-20 17:46:14] [CASH] BillReceivedStatus: Accepted
+[2026-04-20 17:46:14] [SESSION] Accepted 100 for e3ca3445-003a-4ee3-848c-5f229be3e1b6
+[2026-04-20 17:46:19] [CASH] BillStacked: {"Value":50,"Hold":false,"Cancel":false}
+[2026-04-20 17:46:20] [CASH] CashCode received bill
+[2026-04-20 17:46:20] [CASH] BillReceivedStatus: Accepted
+[2026-04-20 17:46:20] [SESSION] Accepted 50 for e3ca3445-003a-4ee3-848c-5f229be3e1b6
+[2026-04-20 17:46:25] [CASH] BillStacked: {"Value":10,"Hold":false,"Cancel":false}
+[2026-04-20 17:46:26] [CASH] CashCode received bill
+[2026-04-20 17:46:26] [CASH] BillReceivedStatus: Accepted
+[2026-04-20 17:46:26] [SESSION] Accepted 10 for e3ca3445-003a-4ee3-848c-5f229be3e1b6
+[2026-04-20 17:46:31] [CASH] BillStacked: {"Value":5,"Hold":false,"Cancel":false}
+[2026-04-20 17:49:28] [SERVER] Client closed connection.
+[2026-04-20 17:51:26] [SERVER] Client connected: ::1
+[2026-04-20 17:51:49] [SERVER] Received: {"Command": "ValidatorStart", "Guid": "18a1ec48-56a1-4f0a-abc4-82db71277aca", "Sum": 20000}
+[2026-04-20 17:51:49] [CASH] CashTable: {"1":5,"2":10,"3":50,"4":100,"12":200,"5":500,"6":1000,"13":2000,"7":5000}
+[2026-04-20 17:51:49] System.Collections.Generic.Dictionary`2[System.Int32,System.Int32] CashCodeTable
+[2026-04-20 17:51:51] [CASH] Таблица в приватном поле {"1":5,"2":10,"3":50,"4":100,"12":200,"5":500,"6":1000,"13":2000,"7":5000}
+[2026-04-20 17:51:51] [CASH] Created
+[2026-04-20 17:51:51] [SESSION] CashCode Connected
+[2026-04-20 17:51:52] [COIN] Created
+[2026-04-20 17:51:52] [SESSION] MicroCoin Connected
+[2026-04-20 17:51:52] [SESSION] Created
+[2026-04-20 17:52:27] [CASH] BillStacked: {"Value":5000,"Hold":false,"Cancel":false}
+[2026-04-20 17:52:28] [CASH] CashCode received bill
+[2026-04-20 17:52:28] [CASH] BillReceivedStatus: Accepted
+[2026-04-20 17:52:28] [SESSION] Accepted 5000 for 18a1ec48-56a1-4f0a-abc4-82db71277aca
+[2026-04-20 17:52:37] [CASH] BillStacked: {"Value":5000,"Hold":false,"Cancel":false}
+[2026-04-20 17:52:38] [CASH] CashCode received bill
+[2026-04-20 17:52:38] [CASH] BillReceivedStatus: Accepted
+[2026-04-20 17:52:38] [SESSION] Accepted 5000 for 18a1ec48-56a1-4f0a-abc4-82db71277aca
+[2026-04-20 17:52:46] [CASH] BillStacked: {"Value":2000,"Hold":false,"Cancel":false}
+[2026-04-20 17:52:47] [CASH] CashCode received bill
+[2026-04-20 17:52:47] [CASH] BillReceivedStatus: Accepted
+[2026-04-20 17:52:47] [SESSION] Accepted 2000 for 18a1ec48-56a1-4f0a-abc4-82db71277aca
+[2026-04-20 17:52:55] [CASH] BillStacked: {"Value":1000,"Hold":false,"Cancel":false}
+[2026-04-20 17:52:56] [CASH] CashCode received bill
+[2026-04-20 17:52:56] [CASH] BillReceivedStatus: Accepted
+[2026-04-20 17:52:56] [SESSION] Accepted 1000 for 18a1ec48-56a1-4f0a-abc4-82db71277aca
+[2026-04-20 17:53:02] [CASH] BillStacked: {"Value":500,"Hold":false,"Cancel":false}
+[2026-04-20 17:53:03] [CASH] CashCode received bill
+[2026-04-20 17:53:03] [CASH] BillReceivedStatus: Accepted
+[2026-04-20 17:53:03] [SESSION] Accepted 500 for 18a1ec48-56a1-4f0a-abc4-82db71277aca
+[2026-04-20 17:53:12] [CASH] BillStacked: {"Value":200,"Hold":false,"Cancel":false}
+[2026-04-20 17:53:13] [CASH] CashCode received bill
+[2026-04-20 17:53:13] [CASH] BillReceivedStatus: Accepted
+[2026-04-20 17:53:13] [SESSION] Accepted 200 for 18a1ec48-56a1-4f0a-abc4-82db71277aca
+[2026-04-20 17:53:20] [CASH] BillStacked: {"Value":100,"Hold":false,"Cancel":false}
+[2026-04-20 17:53:21] [CASH] CashCode received bill
+[2026-04-20 17:53:21] [CASH] BillReceivedStatus: Accepted
+[2026-04-20 17:53:21] [SESSION] Accepted 100 for 18a1ec48-56a1-4f0a-abc4-82db71277aca
+[2026-04-20 17:53:30] [CASH] BillStacked: {"Value":100,"Hold":false,"Cancel":false}
+[2026-04-20 17:53:31] [CASH] CashCode received bill
+[2026-04-20 17:53:31] [CASH] BillReceivedStatus: Accepted
+[2026-04-20 17:53:31] [SESSION] Accepted 100 for 18a1ec48-56a1-4f0a-abc4-82db71277aca
+[2026-04-20 17:53:39] [CASH] BillStacked: {"Value":50,"Hold":false,"Cancel":false}
+[2026-04-20 17:53:54] [CASH] BillStacked: {"Value":10,"Hold":false,"Cancel":false}
+[2026-04-20 17:54:01] [CASH] BillStacked: {"Value":5,"Hold":false,"Cancel":false}
+[2026-04-20 17:54:02] [CASH] CashCode received bill
+[2026-04-20 17:54:02] [CASH] BillReceivedStatus: Accepted
+[2026-04-20 17:54:02] [SESSION] Accepted 5 for 18a1ec48-56a1-4f0a-abc4-82db71277aca
+[2026-04-20 17:54:22] [SERVER] Client closed connection.

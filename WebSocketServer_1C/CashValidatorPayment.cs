@@ -1,12 +1,13 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using CashCode;
-
+using CashCode;
+using System.Collections.Generic;
 using System.Collections.Generic;
 using System.IO.Ports;
+using System.Reflection;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Threading.Tasks;
 using System.Timers;
-using CashCode;
 using WebSocketServer_1C;
 
 public class CashValidatorPayment : PaymentBase
@@ -22,12 +23,13 @@ public class CashValidatorPayment : PaymentBase
     private readonly object _disposeLock = new();
     System.Timers.Timer pingTimer;
 
-    public CashValidatorPayment(string portName, long targetSum, int baudRate = 9600, Dictionary<int, int>? cashCodeTable = null)
+    public CashValidatorPayment(string portName, long targetSum, int baudRate = 9600,
+        Dictionary<int, int>? cashCodeTable = null)
     {
         _needSum = targetSum;
         _cashCodeBV = new CashCodeBillValidator(portName, baudRate);
         _cashCodeBV.ConnectBillValidator();
-
+        UpdateCashTable();
         try
         {
             _cashCodeBV.PowerUpBillValidator();
@@ -37,12 +39,24 @@ public class CashValidatorPayment : PaymentBase
             _cashCodeBV.Dispose();
             throw;
         }
-        
+
+        _cashCodeBV.BillException += OnBillException; //---
+        _cashCodeBV.BillStacking += OnBillStacking; //---
         _cashCodeBV.BillReceived += CashCodeBvOnBillReceived;
         _cashCodeBV.StartListening();
         StartPolling();
-
+        GetCashTable(); //---
         FileLogger.Log("[CASH] Created");
+    }
+
+    private void OnBillException(object sender, BillExceptionEventArgs e) //---
+    {
+        FileLogger.Log("[CASH] BillException: " + JsonSerializer.Serialize(e));
+    }
+
+    private void OnBillStacking(object sender, BillStackedEventArgs e) //---
+    {
+        FileLogger.Log("[CASH] BillStacked: " + JsonSerializer.Serialize(e));
     }
 
     private void StartPolling()
@@ -97,12 +111,31 @@ public class CashValidatorPayment : PaymentBase
 
     private void CashCodeBvOnBillReceived(object sender, BillReceivedEventArgs e)
     {
+        FileLogger.Log("[CASH] CashCode received bill");
+        FileLogger.Log("[CASH] BillReceivedStatus: " + e.Status);
         if (e.Status != BillRecievedStatus.Accepted) return;
         _sum += e.Value;
         OnPartResult(e.Value);
     }
 
-    public override void CloseSession()
+    private void UpdateCashTable()
+    {
+        var cashTable = JsonSerializer.Deserialize<Dictionary<int, int>>(File.ReadAllText("CashConfig.json"));
+        FileLogger.Log("[CASH] CashTable: " + JsonSerializer.Serialize(cashTable)); //---
+        var field = typeof(CashCodeBillValidator)
+            .GetField("CashCodeTable", BindingFlags.NonPublic | BindingFlags.Instance);
+        FileLogger.Log(field?.FieldType + " " + field?.Name); //---
+        field?.SetValue(_cashCodeBV, cashTable);
+    }
+
+    private void GetCashTable() //---
+    {
+        var field = typeof(CashCodeBillValidator)
+            .GetField("CashCodeTable", BindingFlags.NonPublic | BindingFlags.Instance);
+        FileLogger.Log("[CASH] Таблица в приватном поле " + JsonSerializer.Serialize(field?.GetValue(_cashCodeBV)));
+    }
+
+public override void CloseSession()
     {
         lock (_disposeLock)
         {

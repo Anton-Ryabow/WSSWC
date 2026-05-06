@@ -33,6 +33,9 @@ public class CashValidatorPayment : PaymentBase
         try
         {
             _cashCodeBV.PowerUpBillValidator();
+            var enableStatus = _cashCodeBV.EnableBillValidator();
+            if (enableStatus != 0)
+                throw new Exception($"EnableBillValidator returned {enableStatus}");
         }
         catch
         {
@@ -61,7 +64,7 @@ public class CashValidatorPayment : PaymentBase
 
     private void StartPolling()
     {
-        pingTimer = new(1000);
+        pingTimer = new(2000);
         pingTimer.Elapsed += PingTimerHandler;
         pingTimer.Start();
     }
@@ -85,16 +88,17 @@ public class CashValidatorPayment : PaymentBase
                 return;
             }
 
-            var status = _cashCodeBV.EnableBillValidator();
+            bool isHealthy = _cashCodeBV.IsConnected;
             pingTimer.Start();
 
-            if (status != 0)
+            if (!isHealthy)
             {
                 _isDisposing = true;
                 StopPolling();
-                Console.WriteLine(_cashCodeBV.IsConnected);
 
                 _cashCodeBV.BillReceived -= CashCodeBvOnBillReceived;
+                _cashCodeBV.BillStacking -= OnBillStacking;
+                _cashCodeBV.BillException -= OnBillException;
                 _cashCodeBV.Dispose();
 
                 FileLogger.Log("[CASH] Disabled by error");
@@ -132,7 +136,7 @@ public class CashValidatorPayment : PaymentBase
     {
         var field = typeof(CashCodeBillValidator)
             .GetField("CashCodeTable", BindingFlags.NonPublic | BindingFlags.Instance);
-        FileLogger.Log("[CASH] Таблица в приватном поле " + JsonSerializer.Serialize(field?.GetValue(_cashCodeBV)));
+        FileLogger.Log("[CASH] пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ " + JsonSerializer.Serialize(field?.GetValue(_cashCodeBV)));
     }
 
 public override void CloseSession()

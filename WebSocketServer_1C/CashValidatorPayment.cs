@@ -55,6 +55,7 @@ public class CashValidatorPayment : PaymentBase
     private void OnBillException(object sender, BillExceptionEventArgs e) //---
     {
         FileLogger.Log("[CASH] BillException: " + JsonSerializer.Serialize(e));
+        Task.Run(HandleFatalError);
     }
 
     private void OnBillStacking(object sender, BillStackedEventArgs e) //---
@@ -78,37 +79,38 @@ public class CashValidatorPayment : PaymentBase
 
     void PingTimerHandler(object sender, ElapsedEventArgs e)
     {
-        pingTimer.Stop();
-
+        bool isHealthy;
         lock (_disposeLock)
         {
-            if (_isDisposing)
+            if (_isDisposing) return;
+            try { isHealthy = _cashCodeBV.IsConnected; }
+            catch { isHealthy = false; }
+        }
+
+        if (!isHealthy) HandleFatalError();
+    }
+
+    private void HandleFatalError()
+    {
+        lock (_disposeLock)
+        {
+            if (_isDisposing) return;
+            _isDisposing = true;
+
+            try { StopPolling(); } catch { }
+
+            _cashCodeBV.BillReceived -= CashCodeBvOnBillReceived;
+            _cashCodeBV.BillStacking -= OnBillStacking;
+            _cashCodeBV.BillException -= OnBillException;
+            try { _cashCodeBV.Dispose(); } catch { }
+
+            FileLogger.Log("[CASH] Disabled by error");
+
+            if (!_isErrorHandled)
             {
-                pingTimer.Start();
-                return;
-            }
-
-            bool isHealthy = _cashCodeBV.IsConnected;
-            pingTimer.Start();
-
-            if (!isHealthy)
-            {
-                _isDisposing = true;
-                StopPolling();
-
-                _cashCodeBV.BillReceived -= CashCodeBvOnBillReceived;
-                _cashCodeBV.BillStacking -= OnBillStacking;
-                _cashCodeBV.BillException -= OnBillException;
-                _cashCodeBV.Dispose();
-
-                FileLogger.Log("[CASH] Disabled by error");
-
-                if (!_isErrorHandled)
-                {
-                    _isErrorHandled = true;
-                    _isClosed = true;
-                    OnError();
-                }
+                _isErrorHandled = true;
+                _isClosed = true;
+                OnError();
             }
         }
     }
